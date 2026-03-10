@@ -1,0 +1,8 @@
+services:
+  point-service:
+    image: 267837905230.dkr.ecr.ap-northeast-2.amazonaws.com/board-system/point-service-nest:${IMAGE_TAG}
+    restart: unless-stopped
+    ports:
+      - "8080:3000"
+    env_file:
+      - .env
