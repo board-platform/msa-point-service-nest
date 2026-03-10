@@ -1,99 +1,100 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Point Service
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+게시글 작성 시 포인트 차감 및 적립을 담당하는 내부 전용 서비스입니다.  
+정합성이 중요한 도메인으로, 동기 호출 기반 처리 구조를 사용합니다.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+---
 
-## Description
+## 1. 역할 (Responsibility)
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- 게시글 작성 시 포인트 차감
+- 활동 점수 적립
+- 사용자별 포인트 상태 관리
 
-## Project setup
+외부에 직접 노출되지 않으며, 내부 서비스(Board Service)를 통해서만 호출됩니다.
+
+---
+
+## 2. API 구조
+
+Internal API만 제공합니다.
+
+### 포인트 적립
+
+POST `/internal/points/add`
+
+### 포인트 차감
+
+POST `/internal/points/deduct`
+
+---
+
+## 3. 처리 흐름
+
+### 게시글 작성 시 포인트 차감
+
+1. Board Service에서 동기 호출
+2. 사용자 포인트 조회
+3. 차감 로직 수행
+4. 트랜잭션 커밋
+
+포인트 차감은 게시글 작성의 선행 조건이므로  
+동기 처리 방식으로 설계했습니다.
+
+---
+
+## 4. 트랜잭션 처리
+
+모든 포인트 변경 로직은 **Prisma Transaction**을 사용하여 처리됩니다.
+
+- addPoints()
+- deductPoints()
+
+Prisma의 `$transaction`을 활용하여 포인트 조회와 변경이 하나의 원자적 작업으로 수행되도록 설계했습니다.
+
+현재 구조는 단일 인스턴스 환경을 기준으로 하며, 동시 요청 상황에서는 데이터 정합성을 보장하기 위해 트랜잭션 기반 업데이트 로직을 사용합니다.
+
+
+---
+
+## 5. 현재 설계 특징
+
+- Prisma 기반 상태 변경 구조
+- 사용자별 단일 포인트 레코드 관리
+- 포인트 변경은 동기 API 호출 기반 처리
+
+현재 버전은 기본 동작에 집중한 구조이며,  
+다음과 같은 보완이 가능합니다:
+
+- Optimistic Lock(@Version) 기반 동시성 제어
+- 포인트 부족 시 예외 처리 로직 강화
+- 음수 방지 검증 로직 추가
+- userId unique 제약 조건 명시
+
+---
+
+## 6. 내부 통신 원칙
+
+- 서비스 간 DB 직접 접근 금지
+- 포인트 변경은 반드시 Point Service를 통해 처리
+- 비즈니스 로직은 서비스 레이어에 집중
+
+---
+
+## 7. 기술 스택
+
+- NestJS 11
+- Prisma 6
+- MySQL (RDS)
+- Internal ALB 기반 통신
+
+---
+
+## 8. Local 실행
 
 ```bash
-$ pnpm install
+docker-compose up -d
 ```
 
-## Compile and run the project
-
-```bash
-# development
-$ pnpm run start
-
-# watch mode
-$ pnpm run start:dev
-
-# production mode
-$ pnpm run start:prod
-```
-
-## Run tests
-
-```bash
-# unit tests
-$ pnpm run test
-
-# e2e tests
-$ pnpm run test:e2e
-
-# test coverage
-$ pnpm run test:cov
-```
-
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ pnpm install -g mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+기본 포트: 3000  
+Docker 환경에서는 `8080:3000` 포트 매핑을 사용합니다.
