@@ -14,7 +14,9 @@ datasource db {
 }
 
 model Point {
-  id        Int      @id @default(autoincrement())
-  userId    Int      @unique
+  pointId   BigInt      @id @default(autoincrement())  @map("point_id")
+  userId    BigInt      @map("user_id")
   amount    Int
+
+  @@map("points")
 }
