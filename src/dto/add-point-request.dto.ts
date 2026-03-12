@@ -1,4 +1,4 @@
 export class AddPointRequestDto {
-    userId: number
+    userId: bigint
     amount: number
   }

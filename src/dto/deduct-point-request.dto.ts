@@ -1,4 +1,4 @@
 export class DeductPointRequestDto {
-    userId: number
+    userId: bigint
     amount: number
   }
