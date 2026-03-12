@@ -6,3 +6,6 @@ CREATE TABLE "points" (
 
     CONSTRAINT "points_pkey" PRIMARY KEY ("point_id")
 );
+
+-- CreateIndex
+CREATE UNIQUE INDEX "points_user_id_key" ON "points"("user_id");
