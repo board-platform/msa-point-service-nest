@@ -6,7 +6,7 @@ export class PointService {
 
   constructor(private prisma: PrismaService) {}
 
-  async addPoints(userId: bigint, amount: number) {
+  async addPoints(userId: number, amount: number) {
     return this.prisma.point.upsert({
       where: { userId },
       create: {
@@ -21,7 +21,7 @@ export class PointService {
     });
   }
 
-  async deductPoints(userId: bigint, amount: number) {
+  async deductPoints(userId: number, amount: number) {
     const result = await this.prisma.point.updateMany({
       where: { 
         userId,

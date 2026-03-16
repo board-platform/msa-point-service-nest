@@ -1,7 +1,7 @@
 -- CreateTable
 CREATE TABLE "points" (
-    "point_id" BIGSERIAL NOT NULL,
-    "user_id" BIGINT NOT NULL,
+    "point_id" SERIAL NOT NULL,
+    "user_id" INTEGER NOT NULL,
     "amount" INTEGER NOT NULL,
 
     CONSTRAINT "points_pkey" PRIMARY KEY ("point_id")
