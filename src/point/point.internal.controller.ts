@@ -1,5 +1,5 @@
 import { Controller, Post, Body, HttpCode } from '@nestjs/common';
-import { PointService } from '../service/point.service';
+import { PointService } from '../point/point.service';
 import { AddPointRequestDto } from 'src/dto/add-point-request.dto';
 import { DeductPointRequestDto } from 'src/dto/deduct-point-request.dto';
 

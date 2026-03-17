@@ -1,4 +1,5 @@
 import { Injectable } from "@nestjs/common";
+import { Point } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 
 @Injectable()
@@ -49,5 +50,19 @@ export class PointService {
     }
     
     return this.prisma.point.findUnique({ where: { userId }});
+  }
+
+  async findByUserId(userId: number): Promise<Point> {
+    const result = await this.prisma.point.findUnique({
+      where: {
+        userId
+      }
+    });
+
+    if (!result) {
+      throw new Error("사용자의 포인트 정보를 찾을 수 없습니다.");
+    }
+
+    return result;
   }
 }
