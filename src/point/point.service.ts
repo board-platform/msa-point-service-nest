@@ -52,17 +52,14 @@ export class PointService {
     return this.prisma.point.findUnique({ where: { userId }});
   }
 
-  async findByUserId(userId: number): Promise<Point> {
-    const result = await this.prisma.point.findUnique({
-      where: {
-        userId
-      }
+  async createInitialPoint(userId: number) {
+    return this.prisma.point.upsert({
+      where: { userId },
+      create: {
+        userId,
+        amount: 1000
+      },
+      update: {} // 👈 아무것도 안함 (중복 이벤트 무시)
     });
-
-    if (!result) {
-      throw new Error("사용자의 포인트 정보를 찾을 수 없습니다.");
-    }
-
-    return result;
   }
 }
